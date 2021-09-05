@@ -27,7 +27,7 @@ class pydb:
 
         if not os.path.isfile(path):
             url = "https://raw.githubusercontent.com/tflearn/tflearn.github.io/master/resources/US_Cities.txt"
-            r = requests.get(url, verify=False)
+            r = requests.get(url)
             with open(path, 'wb') as f:
                 f.write(r.content)
 
