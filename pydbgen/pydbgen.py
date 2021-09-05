@@ -1,6 +1,5 @@
 import os
 import random
-import requests
 import sqlite3
 from pathlib import Path
 from random import randint, choice
