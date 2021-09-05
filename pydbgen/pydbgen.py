@@ -23,13 +23,8 @@ class pydb:
         self.domain_list = self._initialize_email_domain_list()
 
     def _initialize_city_list(self):
-        path = "US_Cities.txt"
-
-        if not os.path.isfile(path):
-            url = "https://raw.githubusercontent.com/tflearn/tflearn.github.io/master/resources/US_Cities.txt"
-            r = requests.get(url)
-            with open(path, 'wb') as f:
-                f.write(r.content)
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        path = dir_path + os.sep + "Cities.txt"
 
         with open(path) as fh:
             city_list = [str(line).strip() for line in fh.readlines()]
