@@ -269,7 +269,7 @@ class pydb:
             fields=None,
             db_file=None,
             table_name=None,
-            primarykey=None,
+            primarykey: list = None,
             real_email=True,
             real_city=True,
             phone_simple=True
@@ -307,7 +307,7 @@ class pydb:
             conn = sqlite3.connect(str(db_file))
             c = conn.cursor()
 
-        if type(primarykey) != str and primarykey is not None:
+        if type(primarykey) != list and primarykey is not None:
             print("Primary key type not identified. Not generating any table")
             return None
 
@@ -317,23 +317,16 @@ class pydb:
             for col in fields[1:-1]:
                 table_cols += str(col) + " varchar,"
             table_cols += str(fields[-1]) + " varchar" + ")"
-            # print(table_cols)
         else:
-            pk = str(primarykey)
-            if pk not in fields:
-                print(
-                    "Desired primary key is not in the list of fields provided, cannot generate the table!"
-                )
+            if not (pk in fields for pk in primarykey):
+                print("Desired primary key is not in the list of fields provided, cannot generate the table!")
                 return None
 
             table_cols = "(" + str(fields[0]) + " varchar, "
             for col in fields[1:-1]:
-                if col == pk:
-                    table_cols += str(col) + " varchar PRIMARY KEY NOT NULL,"
-                else:
-                    table_cols += str(col) + " varchar, "
-            table_cols += str(fields[-1]) + " varchar" + ")"
-            # print(table_cols)
+                table_cols += str(col) + " varchar, "
+            table_cols += str(fields[-1]) + " varchar, "
+            table_cols += f" PRIMARY KEY ({', '.join(primarykey)})) "
 
         if not table_name:
             table_name = "Table1"
@@ -342,7 +335,7 @@ class pydb:
 
         str_drop_table = f"DROP TABLE IF EXISTS {table_name};"
         c.execute(str_drop_table)
-        str_create_table = "CREATE TABLE IF NOT EXISTS {table_name}{table_cols};"
+        str_create_table = f"CREATE TABLE IF NOT EXISTS {table_name}{table_cols};"
         c.execute(str_create_table)
 
         # Create a temporary df
