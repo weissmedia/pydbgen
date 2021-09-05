@@ -1,7 +1,9 @@
 import os
 import random
+import requests
 from random import randint, choice
 import pandas as pd
+from faker import Faker
 
 
 class pydb:
@@ -10,7 +12,6 @@ class pydb:
         Initiates the class and creates a Faker() object for later data generation by other methods
         seed: User can set a seed parameter to generate deterministic, non-random output
         """
-        from faker import Faker
 
         self.faker = Faker
         self.fake = Faker()
@@ -21,18 +22,14 @@ class pydb:
         self.domain_list = self._initialize_email_domain_list()
 
     def _initialize_city_list(self):
-        from six import moves
-        import ssl
-
         path = "US_Cities.txt"
-        if not os.path.isfile(path):
-            context = ssl._create_unverified_context()
-            moves.urllib.request.urlretrieve(
-                "https://raw.githubusercontent.com/tflearn/tflearn.github.io/master/resources/US_Cities.txt",
-                path,
-            )
 
-        city_list = []
+        if not os.path.isfile(path):
+            url = "https://raw.githubusercontent.com/tflearn/tflearn.github.io/master/resources/US_Cities.txt"
+            r = requests.get(url, verify=False)
+            with open(path, 'wb') as f:
+                f.write(r.content)
+
         with open(path) as fh:
             city_list = [str(line).strip() for line in fh.readlines()]
 
@@ -42,7 +39,6 @@ class pydb:
         dir_path = os.path.dirname(os.path.realpath(__file__))
         path = dir_path + os.sep + "Domains.txt"
 
-        domain_list = []
         with open(path) as fh:
             domain_list = [str(line).strip() for line in fh.readlines()]
 
@@ -142,7 +138,7 @@ class pydb:
 
         return choice(self.city_list)
 
-    def gen_data_series(self, num=10, data_type="name", seed=None):
+    def gen_data_series(self, num=10, data_type="name"):
         """
         Returns a pandas series object with the desired number of entries and data type
 
@@ -167,17 +163,17 @@ class pydb:
             num = int(num)
         except:
             raise ValueError(
-                "Number of samples must be a positive integer, found " + num
+                f"Number of samples must be a positive integer, found {num}"
             )
 
         if num <= 0:
             raise ValueError(
-                "Number of samples must be a positive integer, found " + num
+                f"Number of samples must be a positive integer, found {num}"
             )
 
         num = int(num)
         fake = self.fake
-        self.faker.seed(self.seed)
+        Faker.seed(self.seed)
 
         func_lookup = {
             "name": fake.name,
@@ -216,13 +212,9 @@ class pydb:
         try:
             num = int(num)
         except:
-            raise ValueError(
-                "Number of samples must be a positive integer, found " + num
-            )
+            raise ValueError(f"Number of samples must be a positive integer, found {num}")
         if num <= 0:
-            raise ValueError(
-                "Number of samples must be a positive integer, found " + num
-            )
+            raise ValueError(f"Number of samples must be a positive integer, found {num}")
 
         num_cols = len(fields)
         if num_cols < 0:
@@ -231,13 +223,12 @@ class pydb:
             )
 
     def gen_dataframe(
-        self,
-        num=10,
-        fields=["name"],
-        real_email=True,
-        real_city=True,
-        phone_simple=True,
-        seed=None,
+            self,
+            num=10,
+            fields=None,
+            real_email=True,
+            real_city=True,
+            phone_simple=True
     ):
         """
         Generate a pandas dataframe filled with random entries.
@@ -257,6 +248,8 @@ class pydb:
         seed: Currently not used. Uses seed from the pydb class if chosen by user
 
         """
+        if fields is None:
+            fields = ["name"]
         self._validate_args(num, fields)
 
         df = pd.DataFrame(
@@ -285,16 +278,15 @@ class pydb:
         return df
 
     def gen_table(
-        self,
-        num=10,
-        fields=["name"],
-        db_file=None,
-        table_name=None,
-        primarykey=None,
-        real_email=True,
-        real_city=True,
-        phone_simple=True,
-        seed=None,
+            self,
+            num=10,
+            fields=None,
+            db_file=None,
+            table_name=None,
+            primarykey=None,
+            real_email=True,
+            real_city=True,
+            phone_simple=True
     ):
         """
         Attempts to create a table in a database (.db) file using Python's built-in SQLite engine.
@@ -318,6 +310,8 @@ class pydb:
         seed: Currently not used. Uses seed from the pydb class if chosen by user
 
         """
+        if fields is None:
+            fields = ["name"]
         self._validate_args(num, fields)
 
         import sqlite3
@@ -362,12 +356,9 @@ class pydb:
         else:
             table_name = table_name
 
-        str_drop_table = "DROP TABLE IF EXISTS " + str(table_name) + ";"
+        str_drop_table = f"DROP TABLE IF EXISTS {table_name};"
         c.execute(str_drop_table)
-        str_create_table = (
-            "CREATE TABLE IF NOT EXISTS " + str(table_name) + table_cols + ";"
-        )
-        # print(str_create_table)
+        str_create_table = "CREATE TABLE IF NOT EXISTS {table_name}{table_cols};"
         c.execute(str_create_table)
 
         # Create a temporary df
@@ -381,11 +372,11 @@ class pydb:
         # Use the dataframe to insert into the table
         for i in range(num):
             str_insert = (
-                "INSERT INTO "
-                + table_name
-                + " VALUES "
-                + str(tuple(temp_df.iloc[i]))
-                + ";"
+                    "INSERT INTO "
+                    + table_name
+                    + " VALUES "
+                    + str(tuple(temp_df.iloc[i]))
+                    + ";"
             )
             c.execute(str_insert)
 
@@ -394,14 +385,13 @@ class pydb:
         conn.close()
 
     def gen_excel(
-        self,
-        num=10,
-        fields=["name"],
-        filename="NewExcel.xlsx",
-        real_email=True,
-        real_city=True,
-        phone_simple=True,
-        seed=None,
+            self,
+            num=10,
+            fields=None,
+            filename="NewExcel.xlsx",
+            real_email=True,
+            real_city=True,
+            phone_simple=True
     ):
         """
         Attempts to create an Excel file using Pandas excel_writer function.
@@ -423,6 +413,8 @@ class pydb:
         seed: Currently not used. Uses seed from the pydb class if chosen by user
 
         """
+        if fields is None:
+            fields = ["name"]
         self._validate_args(num, fields)
 
         # Create a temporary dataframe
