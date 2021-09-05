@@ -97,7 +97,7 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['Faker=>8.12.1', 'Pandas>=1.3.0', 'pysqlite3', 'openpyxl>=3.0.7'],  # Optional
+    install_requires=['Faker==8.12.1', 'Pandas==1.3.2', 'pysqlite3', 'openpyxl==3.0.7'],  # Optional
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.
