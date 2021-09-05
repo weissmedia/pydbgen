@@ -22,7 +22,7 @@ class pydb:
         self.city_list = self._initialize_city_list(city)
         self.domain_list = self._initialize_email_domain_list(domain)
 
-    def _initialize_city_list(self, path: Path=None):
+    def _initialize_city_list(self, path: Path = None):
         if not path:
             dir_path = os.path.dirname(os.path.realpath(__file__))
             path = dir_path + os.sep + "Cities.txt"
@@ -32,7 +32,7 @@ class pydb:
 
         return city_list
 
-    def _initialize_email_domain_list(self, path: Path=None):
+    def _initialize_email_domain_list(self, path: Path = None):
         if not path:
             dir_path = os.path.dirname(os.path.realpath(__file__))
             path = dir_path + os.sep + "Domains.txt"
@@ -57,7 +57,7 @@ class pydb:
 
         return phone_format.format(p1=p1, p2=p2, p3=p3)
 
-    def license_plate(self, seed=None, style=None):
+    def license_plate(self, style=None):
         """
         Generates vehicle license plate number in 3 possible styles
         Style can be 1, 2, or 3.
@@ -89,7 +89,7 @@ class pydb:
 
         return license_place_format.format(p1=p1, p2=p2, p3=p3)
 
-    def realistic_email(self, name, seed=None):
+    def realistic_email(self, name):
         """
         Generates realistic email from first and last name and a random domain address
         seed: Currently not used. Uses seed from the pydb class if chosen by user
@@ -127,7 +127,7 @@ class pydb:
 
         return email
 
-    def city_real(self, seed=None):
+    def city_real(self):
         """
         Picks and returns a random entry out of 385 US cities
         seed: Currently not used. Uses seed from the pydb class if chosen by user
@@ -313,19 +313,19 @@ class pydb:
 
         # If primarykey is None, designate the first field as primary key
         if not primarykey:
-            table_cols = "(" + str(fields[0]) + " varchar PRIMARY KEY NOT NULL,"
+            table_cols = f"({str(fields[0])} varchar PRIMARY KEY NOT NULL,"
             for col in fields[1:-1]:
-                table_cols += str(col) + " varchar,"
-            table_cols += str(fields[-1]) + " varchar" + ")"
+                table_cols += f" {str(col)} varchar,"
+            table_cols += f" {str(fields[-1])} varchar)"
         else:
             if not (pk in fields for pk in primarykey):
                 print("Desired primary key is not in the list of fields provided, cannot generate the table!")
                 return None
 
-            table_cols = "(" + str(fields[0]) + " varchar, "
+            table_cols = f"( {str(fields[0])} varchar, "
             for col in fields[1:-1]:
-                table_cols += str(col) + " varchar, "
-            table_cols += str(fields[-1]) + " varchar, "
+                table_cols += f" {str(col)} varchar, "
+            table_cols += f" {str(fields[-1])} varchar, "
             table_cols += f" PRIMARY KEY ({', '.join(primarykey)})) "
 
         if not table_name:
@@ -348,13 +348,7 @@ class pydb:
         )
         # Use the dataframe to insert into the table
         for i in range(num):
-            str_insert = (
-                    "INSERT INTO "
-                    + table_name
-                    + " VALUES "
-                    + str(tuple(temp_df.iloc[i]))
-                    + ";"
-            )
+            str_insert = f"INSERT INTO {table_name} VALUES {str(tuple(temp_df.iloc[i]))};"
             c.execute(str_insert)
 
         # Commit the insertions and close the connection
