@@ -2,13 +2,14 @@ import os
 import random
 import requests
 import sqlite3
+from pathlib import Path
 from random import randint, choice
 import pandas as pd
 from faker import Faker
 
 
 class pydb:
-    def __init__(self, seed=None):
+    def __init__(self, seed=None, domain: Path=None, city: Path=None):
         """
         Initiates the class and creates a Faker() object for later data generation by other methods
         seed: User can set a seed parameter to generate deterministic, non-random output
@@ -19,21 +20,23 @@ class pydb:
         self.seed = seed
         self.randnum = randint(1, 9)
 
-        self.city_list = self._initialize_city_list()
-        self.domain_list = self._initialize_email_domain_list()
+        self.city_list = self._initialize_city_list(city)
+        self.domain_list = self._initialize_email_domain_list(domain)
 
-    def _initialize_city_list(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        path = dir_path + os.sep + "Cities.txt"
+    def _initialize_city_list(self, path: Path=None):
+        if not path:
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            path = dir_path + os.sep + "Cities.txt"
 
         with open(path) as fh:
             city_list = [str(line).strip() for line in fh.readlines()]
 
         return city_list
 
-    def _initialize_email_domain_list(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        path = dir_path + os.sep + "Domains.txt"
+    def _initialize_email_domain_list(self, path: Path=None):
+        if not path:
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            path = dir_path + os.sep + "Domains.txt"
 
         with open(path) as fh:
             domain_list = [str(line).strip() for line in fh.readlines()]
@@ -152,20 +155,14 @@ class pydb:
 
         """
         if type(data_type) != str:
-            raise ValueError(
-                "Data type must be of type str, found " + str(type(data_type))
-            )
+            raise ValueError("Data type must be of type str, found " + str(type(data_type)))
         try:
             num = int(num)
         except:
-            raise ValueError(
-                f"Number of samples must be a positive integer, found {num}"
-            )
+            raise ValueError(f"Number of samples must be a positive integer, found {num}")
 
         if num <= 0:
-            raise ValueError(
-                f"Number of samples must be a positive integer, found {num}"
-            )
+            raise ValueError(f"Number of samples must be a positive integer, found {num}")
 
         num = int(num)
         fake = self.fake
@@ -173,6 +170,8 @@ class pydb:
 
         func_lookup = {
             "name": fake.name,
+            "first_name": fake.first_name,
+            "last_name": fake.last_name,
             "country": fake.country,
             "street_address": fake.street_address,
             "city": fake.city,
@@ -197,9 +196,7 @@ class pydb:
         }
 
         if data_type not in func_lookup:
-            raise ValueError(
-                "Data type must be one of " + str(list(func_lookup.keys()))
-            )
+            raise ValueError("Data type must be one of " + str(list(func_lookup.keys())))
 
         datagen_func = func_lookup[data_type]
         return pd.Series((datagen_func() for _ in range(num)))
@@ -214,18 +211,9 @@ class pydb:
 
         num_cols = len(fields)
         if num_cols < 0:
-            raise ValueError(
-                "Please provide at least one type of data field to be generated"
-            )
+            raise ValueError("Please provide at least one type of data field to be generated")
 
-    def gen_dataframe(
-            self,
-            num=10,
-            fields=None,
-            real_email=True,
-            real_city=True,
-            phone_simple=True
-    ):
+    def gen_dataframe(self, num=10, fields=None, real_email=True, real_city=True, phone_simple=True):
         """
         Generate a pandas dataframe filled with random entries.
         User can specify the number of rows and data type of the fields/columns
@@ -268,8 +256,11 @@ class pydb:
             else:
                 df[col] = self.gen_data_series(num, data_type=col)
 
-        if ("email" in fields) and ("name" in fields) and real_email:
-            df["email"] = df["name"].apply(self.realistic_email)
+        if ("email" in fields) and real_email:
+            if "name" in fields:
+                df["email"] = df["name"].apply(self.realistic_email)
+            elif all(n in fields for n in ["first_name", "last_name"]):
+                df["email"] = (df["first_name"] + " " + df["last_name"]).apply(self.realistic_email)
 
         return df
 
