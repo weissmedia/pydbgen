@@ -1,6 +1,7 @@
 import os
 import random
 import requests
+import sqlite3
 from random import randint, choice
 import pandas as pd
 from faker import Faker
@@ -313,8 +314,6 @@ class pydb:
         if fields is None:
             fields = ["name"]
         self._validate_args(num, fields)
-
-        import sqlite3
 
         if not db_file:
             conn = sqlite3.connect("NewFakeDB.db")
