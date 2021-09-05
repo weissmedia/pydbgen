@@ -102,7 +102,7 @@ setup(
     # If there are data files included in your packages that need to be
     # installed, specify them here.
     package_data={  # Optional
-        'pydbgen': ['US_Cities.txt', 'Domains.txt'],
+        'pydbgen': ['Cities.txt', 'Domains.txt'],
     },
 
     # List additional URLs that are relevant to your project as a dict.
