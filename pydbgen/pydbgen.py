@@ -89,7 +89,7 @@ class pydb:
 
         return license_place_format.format(p1=p1, p2=p2, p3=p3)
 
-    def realistic_email(self, name):
+    def realistic_email(self, name, name_formats: list=None, choice_int=True):
         """
         Generates realistic email from first and last name and a random domain address
         seed: Currently not used. Uses seed from the pydb class if chosen by user
@@ -100,26 +100,26 @@ class pydb:
         f_name = name.split()[0]
         l_name = name.split()[-1]
 
-        choice_int = choice(range(10))
+        _choice_int = choice(range(10))
 
         domain = choice(self.domain_list)
-
-        name_formats = [
-            "{f}{last}",
-            "{first}{last}",
-            "{first}.{l}",
-            "{first}_{l}",
-            "{first}.{last}",
-            "{first}_{last}",
-            "{last}_{first}",
-            "{last}.{first}",
-        ]
+        if not name_formats:
+            name_formats = [
+                "{f}{last}",
+                "{first}{last}",
+                "{first}.{l}",
+                "{first}_{l}",
+                "{first}.{last}",
+                "{first}_{last}",
+                "{last}_{first}",
+                "{last}.{first}",
+            ]
         name_fmt_choice = choice(name_formats)
         name_combo = name_fmt_choice.format(
             f=f_name[0], l=l_name[0], first=f_name, last=l_name
         )
 
-        if choice_int < 7:
+        if not choice_int or _choice_int < 7:
             email = name_combo + "@" + str(domain)
         else:
             random_int = randint(11, 99)
@@ -212,7 +212,15 @@ class pydb:
         if num_cols < 0:
             raise ValueError("Please provide at least one type of data field to be generated")
 
-    def gen_dataframe(self, num=10, fields=None, real_email=True, real_city=True, phone_simple=True):
+    def gen_dataframe(self,
+                      num=10,
+                      fields=None,
+                      email_formats: list = None,
+                      email_choice_int=True,
+                      real_email=True,
+                      real_city=True,
+                      phone_simple=True
+    ):
         """
         Generate a pandas dataframe filled with random entries.
         User can specify the number of rows and data type of the fields/columns
@@ -257,9 +265,16 @@ class pydb:
 
         if ("email" in fields) and real_email:
             if "name" in fields:
-                df["email"] = df["name"].apply(self.realistic_email)
+                df["email"] = df["name"]\
+                    .apply(lambda n: self.realistic_email(name=n,
+                                                          choice_int=email_choice_int,
+                                                          name_formats=email_formats))
+
             elif all(n in fields for n in ["first_name", "last_name"]):
-                df["email"] = (df["first_name"] + " " + df["last_name"]).apply(self.realistic_email)
+                df["email"] = (df["first_name"] + " " + df["last_name"])\
+                    .apply(lambda n: self.realistic_email(name=n,
+                                                          choice_int=email_choice_int,
+                                                          name_formats=email_formats))
 
         return df
 
